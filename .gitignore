@@ -1,0 +1,13 @@
+# If you accidentally run the skill inside this folder
+backend/
+frontend/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# OS
+.DS_Store
+Thumbs.db
