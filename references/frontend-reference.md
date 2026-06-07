@@ -273,15 +273,17 @@ const WS_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000')
   .replace(/^https/, 'wss')
   .replace(/^http/, 'ws');
 
-export function useChat(sessionId: number | null, session: Session | null) {
+export function useChat(sessionId: number | null, session: Session | null, initialMessages: Message[] = []) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
   const [wsStatus, setWsStatus] = useState<'connecting' | 'connected' | 'disconnected' | 'error'>('disconnected');
   const wsRef = useRef<WebSocket | null>(null);
-  const pendingRef = useRef('');  // accumulates tokens without triggering re-render on each token
+  const pendingRef = useRef('');
+  const initialMessagesRef = useRef(initialMessages);
+  initialMessagesRef.current = initialMessages;
 
   useEffect(() => {
-    setMessages([]);
+    setMessages(initialMessagesRef.current);
     setIsStreaming(false);
     pendingRef.current = '';
 
@@ -351,7 +353,7 @@ export function useChat(sessionId: number | null, session: Session | null) {
     }));
   }, [isStreaming, session]);
 
-  return { messages, setMessages, isStreaming, wsStatus, send };
+  return { messages, isStreaming, wsStatus, send };
 }
 ```
 
@@ -650,7 +652,7 @@ import { MessageList } from '../components/MessageList';
 import { ChatInput } from '../components/ChatInput';
 import { ProviderBadge } from '../components/ProviderBadge';
 import * as chatApi from '../api/chat';
-import type { Session } from '../types';
+import type { Session, Message } from '../types';
 
 type Panel = 'empty' | 'new-session' | 'active';
 
@@ -659,12 +661,13 @@ export function Chat() {
   const navigate = useNavigate();
   const [sessions, setSessions] = useState<Session[]>([]);
   const [activeSession, setActiveSession] = useState<Session | null>(null);
+  const [sessionHistory, setSessionHistory] = useState<Message[]>([]);
   const [panel, setPanel] = useState<Panel>('empty');
   const [provider, setProvider] = useState('claude');
   const [model, setModel] = useState('');
 
-  const { messages, setMessages, isStreaming, wsStatus, send } =
-    useChat(activeSession?.id ?? null, activeSession);
+  const { messages, isStreaming, wsStatus, send } =
+    useChat(activeSession?.id ?? null, activeSession, sessionHistory);
 
   const loadSessions = useCallback(async () => {
     const { data } = await chatApi.listSessions();
@@ -676,8 +679,8 @@ export function Chat() {
   async function openSession(id: number) {
     const { data, error } = await chatApi.getSession(id);
     if (error || !data) return;
+    setSessionHistory(data.messages);
     setActiveSession(data.session);
-    setMessages(data.messages);
     setPanel('active');
     await loadSessions();
   }
