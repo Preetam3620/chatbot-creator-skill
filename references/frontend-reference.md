@@ -833,13 +833,17 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --bg:            #0f172a;
-  --bg-secondary:  #1e293b;
-  --bg-tertiary:   #334155;
-  --text-primary:  #f1f5f9;
-  --text-secondary:#94a3b8;
-  --border:        #334155;
-  --primary:       #6366f1;
+  --bg:            #ffffff;
+  --bg-secondary:  #f8fafc;
+  --bg-tertiary:   #f1f5f9;
+  --text-primary:  #1e293b;
+  --text-secondary:#64748b;
+  --border:        #e2e8f0;
+  --primary:       #2563eb;
+  --primary-hover: #1d4ed8;
+  --secondary:     #64748b;
+  --success:       #10b981;
+  --warning:       #f59e0b;
   --error:         #ef4444;
   --radius:        0.5rem;
 }
