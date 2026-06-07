@@ -134,7 +134,7 @@ export interface Message {
 ## `frontend/src/api/client.ts`
 
 ```typescript
-const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const API_BASE: string = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
 export async function request<T>(
   path: string,
@@ -269,9 +269,10 @@ export function useAuth() {
 import { useState, useEffect, useRef, useCallback } from 'react';
 import type { Message, Session } from '../types';
 
-const WS_BASE = (import.meta.env.VITE_API_URL || 'http://localhost:8000')
-  .replace(/^https/, 'wss')
-  .replace(/^http/, 'ws');
+const _apiUrl: string = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
+const WS_BASE: string = _apiUrl
+  ? _apiUrl.replace(/^https/, 'wss').replace(/^http/, 'ws')
+  : `${window.location.protocol === 'https:' ? 'wss' : 'ws'}://${window.location.host}`;
 
 export function useChat(sessionId: number | null, session: Session | null) {
   const [messages, setMessages] = useState<Message[]>([]);

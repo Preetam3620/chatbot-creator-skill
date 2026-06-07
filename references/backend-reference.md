@@ -53,7 +53,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str = "change-me-generate-with-python-secrets.token_urlsafe-32"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 480
-    CORS_ORIGINS: str = "http://localhost:5173"
+    CORS_ORIGINS: str = "*"
     ANTHROPIC_API_KEY: str = ""
     OPENAI_API_KEY: str = ""
     GEMINI_API_KEY: str = ""
@@ -710,8 +710,11 @@ async def ws_chat(
 
 ```python
 from contextlib import asynccontextmanager
+from pathlib import Path
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from app.config import settings
 from app.database import engine, Base
 import app.models.user  # noqa: F401 — register ORM models
@@ -737,4 +740,18 @@ app.add_middleware(
 from app.api import auth, chat  # noqa: E402
 app.include_router(auth.router)
 app.include_router(chat.router)
+
+# Serve React SPA when frontend has been built into backend/app/static/
+_static = Path(__file__).parent / "static"
+if _static.exists():
+    _assets = _static / "assets"
+    if _assets.exists():
+        app.mount("/assets", StaticFiles(directory=_assets), name="assets")
+
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def _spa(full_path: str):
+        candidate = (_static / full_path).resolve()
+        if candidate.is_file() and str(candidate).startswith(str(_static.resolve())):
+            return FileResponse(candidate)
+        return FileResponse(_static / "index.html")
 ```
